@@ -21,6 +21,8 @@ interface Ideserialize {
   context?: Context
 }
 
+const flatten = (arr: any[]): any[] => arr.reduce((a, b) => a.concat(Array.isArray(b) ? flatten(b) : b), [])
+
 const deserialize = ({
   el,
   config = defaultConfig,
@@ -44,7 +46,7 @@ const deserialize = ({
   }
 
   const children = currentEl.childNodes
-    ? currentEl.childNodes
+    ? flatten(currentEl.childNodes
         .map((node, i) =>
           deserialize({
             el: node,
@@ -56,8 +58,7 @@ const deserialize = ({
         )
         .filter((element) => element)
         .filter((element) => !isSlateDeadEnd(element))
-        .map((element) => addTextNodeToEmptyChildren(element))
-        .flat()
+        .map((element) => addTextNodeToEmptyChildren(element)))
     : []
 
   if (getName(currentEl) === 'body') {
@@ -117,7 +118,7 @@ const gatherTextMarkAttributes = ({ el, config = defaultConfig }: IgatherTextMar
   let allAttrs = {}
   const children = getChildren(el)
   if (children.length) {
-    ;[el, ...children.flat()].forEach((child) => {
+    ;[el, ...flatten(children.flat())].forEach((child) => {
       const name = getName(child as Element)
       const attrs = config.textTags[name] ? config.textTags[name](child as Element) : {}
       allAttrs = {
